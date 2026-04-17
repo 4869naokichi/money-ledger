@@ -34,7 +34,9 @@ create table public.transactions (
   event_date date not null,
   kind text not null,
   category_id uuid,
-  account_id uuid not null,
+  account_id uuid,
+  from_account_id uuid,
+  to_account_id uuid,
   payment_method text,
   merchant text,
   memo text,
@@ -49,8 +51,9 @@ create table public.transactions (
   constraint transactions_status_check check (
     status in ('planned', 'pending', 'cleared', 'cancelled')
   ),
-  constraint transactions_payment_method_not_blank check (
-    payment_method is null or btrim(payment_method) <> ''
+  constraint transactions_payment_method_check check (
+    payment_method is null
+    or payment_method in ('cash', 'paypay', 'card', 'bank', 'other')
   ),
   constraint transactions_merchant_not_blank check (
     merchant is null or btrim(merchant) <> ''
@@ -62,7 +65,30 @@ create table public.transactions (
     (kind in ('income', 'expense') and category_id is not null)
     or (kind = 'transfer' and category_id is null)
   ),
+  constraint transactions_account_flow_check check (
+    (
+      kind in ('income', 'expense')
+      and account_id is not null
+      and from_account_id is null
+      and to_account_id is null
+    )
+    or (
+      kind = 'transfer'
+      and account_id is null
+      and from_account_id is not null
+      and to_account_id is not null
+      and from_account_id <> to_account_id
+    )
+  ),
   constraint transactions_account_id_fkey foreign key (account_id)
+    references public.accounts (id)
+    on update cascade
+    on delete restrict,
+  constraint transactions_from_account_id_fkey foreign key (from_account_id)
+    references public.accounts (id)
+    on update cascade
+    on delete restrict,
+  constraint transactions_to_account_id_fkey foreign key (to_account_id)
     references public.accounts (id)
     on update cascade
     on delete restrict,
@@ -74,6 +100,8 @@ create table public.transactions (
 
 create index transactions_event_date_idx on public.transactions (event_date desc);
 create index transactions_account_id_idx on public.transactions (account_id);
+create index transactions_from_account_id_idx on public.transactions (from_account_id);
+create index transactions_to_account_id_idx on public.transactions (to_account_id);
 create index transactions_category_id_idx on public.transactions (category_id);
 create index transactions_status_idx on public.transactions (status);
 
@@ -83,7 +111,9 @@ create table public.future_items (
   kind text not null,
   amount numeric(14, 2) not null,
   expected_date date not null,
-  account_id uuid not null,
+  account_id uuid,
+  from_account_id uuid,
+  to_account_id uuid,
   status text not null default 'planned',
   note text,
 
@@ -96,7 +126,30 @@ create table public.future_items (
   constraint future_items_note_not_blank check (
     note is null or btrim(note) <> ''
   ),
+  constraint future_items_account_flow_check check (
+    (
+      kind in ('income', 'expense')
+      and account_id is not null
+      and from_account_id is null
+      and to_account_id is null
+    )
+    or (
+      kind = 'transfer'
+      and account_id is null
+      and from_account_id is not null
+      and to_account_id is not null
+      and from_account_id <> to_account_id
+    )
+  ),
   constraint future_items_account_id_fkey foreign key (account_id)
+    references public.accounts (id)
+    on update cascade
+    on delete restrict,
+  constraint future_items_from_account_id_fkey foreign key (from_account_id)
+    references public.accounts (id)
+    on update cascade
+    on delete restrict,
+  constraint future_items_to_account_id_fkey foreign key (to_account_id)
     references public.accounts (id)
     on update cascade
     on delete restrict
@@ -104,6 +157,8 @@ create table public.future_items (
 
 create index future_items_expected_date_idx on public.future_items (expected_date);
 create index future_items_account_id_idx on public.future_items (account_id);
+create index future_items_from_account_id_idx on public.future_items (from_account_id);
+create index future_items_to_account_id_idx on public.future_items (to_account_id);
 create index future_items_status_idx on public.future_items (status);
 
 create table public.savings_adjustments (
@@ -149,6 +204,14 @@ comment on table public.future_items is '将来予定している収入・支出
 comment on table public.savings_adjustments is '貯蓄額の算出時に加算または減算する調整項目';
 
 comment on column public.transactions.kind is 'income: 収入, expense: 支出, transfer: 振替';
+comment on column public.transactions.account_id is '収入・支出の入出金先口座。振替ではnull';
+comment on column public.transactions.from_account_id is '振替元口座。収入・支出ではnull';
+comment on column public.transactions.to_account_id is '振替先口座。収入・支出ではnull';
+comment on column public.transactions.payment_method is 'cash: 現金, paypay: PayPay, card: カード, bank: 銀行, other: その他';
 comment on column public.transactions.status is 'planned: 予定, pending: 未確定, cleared: 確定, cancelled: 取消';
+comment on column public.future_items.kind is 'income: 収入予定, expense: 支出予定, transfer: 振替予定';
+comment on column public.future_items.account_id is '収入・支出予定の入出金先口座。振替予定ではnull';
+comment on column public.future_items.from_account_id is '振替予定の振替元口座。収入・支出予定ではnull';
+comment on column public.future_items.to_account_id is '振替予定の振替先口座。収入・支出予定ではnull';
 comment on column public.accounts.type is 'cash, bank, credit_card, e_money, investment, other';
 comment on column public.savings_adjustments.sign is '1: 加算, -1: 減算';

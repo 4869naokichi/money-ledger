@@ -13,6 +13,24 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 `schema.sql` は初回適用用です。すでに同名テーブルが存在する環境では、先に既存データのバックアップやマイグレーション方針を確認してください。
 
+## 起動方法
+
+`.env.local` に Supabase の接続情報を設定します。
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-supabase-publishable-key
+```
+
+依存関係を入れて、開発サーバーを起動します。
+
+```bash
+npm install
+npm run dev
+```
+
+ブラウザで [http://localhost:3000](http://localhost:3000) を開きます。
+
 ## Getting Started
 
 First, run the development server:
