@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { deleteTransaction } from "./actions";
 import {
   formatDate,
   formatYen,
@@ -114,6 +116,7 @@ export function TransactionTable({
               <th className="whitespace-nowrap px-4 py-3">店名 / メモ</th>
               <th className="whitespace-nowrap px-4 py-3 text-right">金額</th>
               <th className="whitespace-nowrap px-4 py-3">状態</th>
+              <th className="whitespace-nowrap px-4 py-3">操作</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-200">
@@ -149,6 +152,25 @@ export function TransactionTable({
                 </td>
                 <td className="px-4 py-4">
                   <StatusBadge status={transaction.status} />
+                </td>
+                <td className="px-4 py-4">
+                  <div className="flex gap-2">
+                    <Link
+                      className="rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-700 transition hover:border-teal-300 hover:bg-teal-50 hover:text-teal-800"
+                      href={`/transactions/${transaction.id}/edit`}
+                    >
+                      編集
+                    </Link>
+                    <form action={deleteTransaction}>
+                      <input name="id" type="hidden" value={transaction.id} />
+                      <button
+                        className="rounded-md border border-rose-200 px-3 py-2 text-sm font-medium text-rose-700 transition hover:bg-rose-50"
+                        type="submit"
+                      >
+                        削除
+                      </button>
+                    </form>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -191,6 +213,23 @@ export function TransactionTable({
             {transaction.memo && transaction.merchant ? (
               <p className="mt-3 text-sm text-zinc-600">{transaction.memo}</p>
             ) : null}
+            <div className="mt-4 flex gap-2 border-t border-zinc-200 pt-3">
+              <Link
+                className="rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-700 transition hover:border-teal-300 hover:bg-teal-50 hover:text-teal-800"
+                href={`/transactions/${transaction.id}/edit`}
+              >
+                編集
+              </Link>
+              <form action={deleteTransaction}>
+                <input name="id" type="hidden" value={transaction.id} />
+                <button
+                  className="rounded-md border border-rose-200 px-3 py-2 text-sm font-medium text-rose-700 transition hover:bg-rose-50"
+                  type="submit"
+                >
+                  削除
+                </button>
+              </form>
+            </div>
           </article>
         ))}
       </div>

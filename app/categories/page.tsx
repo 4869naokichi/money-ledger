@@ -42,6 +42,8 @@ export default async function CategoriesPage({
     searchParams,
   ]);
   const created = firstParam(params.created);
+  const deleted = firstParam(params.deleted);
+  const restored = firstParam(params.restored);
   const formError = firstParam(params.error);
 
   return (
@@ -68,6 +70,18 @@ export default async function CategoriesPage({
       {created ? (
         <div className="border border-teal-200 bg-teal-50 p-4 text-sm text-teal-800">
           カテゴリを追加しました。
+        </div>
+      ) : null}
+
+      {deleted ? (
+        <div className="border border-teal-200 bg-teal-50 p-4 text-sm text-teal-800">
+          カテゴリを削除しました。
+        </div>
+      ) : null}
+
+      {restored ? (
+        <div className="border border-teal-200 bg-teal-50 p-4 text-sm text-teal-800">
+          削除済みのカテゴリを復活しました。
         </div>
       ) : null}
 

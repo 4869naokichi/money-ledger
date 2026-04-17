@@ -40,6 +40,9 @@ export default async function Home({ searchParams }: HomeProps) {
     searchParams,
   ]);
   const created = firstParam(params.created);
+  const updated = firstParam(params.updated);
+  const deleted = firstParam(params.deleted);
+  const formError = firstParam(params.error);
   const incomeTotal = getTransactionTotal(transactions, "income");
   const expenseTotal = getTransactionTotal(transactions, "expense");
   const balance = incomeTotal - expenseTotal;
@@ -87,9 +90,27 @@ export default async function Home({ searchParams }: HomeProps) {
         </div>
       ) : null}
 
+      {formError ? (
+        <div className="border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
+          {formError}
+        </div>
+      ) : null}
+
       {created ? (
         <div className="border border-teal-200 bg-teal-50 p-4 text-sm text-teal-800">
           取引を登録しました。
+        </div>
+      ) : null}
+
+      {updated ? (
+        <div className="border border-teal-200 bg-teal-50 p-4 text-sm text-teal-800">
+          取引を更新しました。
+        </div>
+      ) : null}
+
+      {deleted ? (
+        <div className="border border-teal-200 bg-teal-50 p-4 text-sm text-teal-800">
+          取引を削除しました。
         </div>
       ) : null}
 

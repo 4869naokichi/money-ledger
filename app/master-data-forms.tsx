@@ -1,4 +1,9 @@
-import { createAccount, createCategory } from "./actions";
+import {
+  createAccount,
+  createCategory,
+  deleteAccount,
+  deleteCategory,
+} from "./actions";
 import {
   accountTypeLabels,
   kindLabels,
@@ -97,14 +102,25 @@ export function AccountSection({ accounts }: AccountSectionProps) {
         {accounts.length === 0 ? (
           <p className="mt-3 text-sm text-zinc-500">まだ口座がありません。</p>
         ) : (
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className="mt-3 grid gap-2">
             {accounts.map((account) => (
-              <span
-                className="rounded-md border border-zinc-200 bg-zinc-50 px-2 py-1 text-sm text-zinc-700"
+              <div
+                className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-700"
                 key={account.id}
               >
-                {account.name} / {accountTypeLabels[account.type]}
-              </span>
+                <span>
+                  {account.name} / {accountTypeLabels[account.type]}
+                </span>
+                <form action={deleteAccount}>
+                  <input name="id" type="hidden" value={account.id} />
+                  <button
+                    className="rounded-md border border-rose-200 px-3 py-1 text-sm font-medium text-rose-700 transition hover:bg-rose-50"
+                    type="submit"
+                  >
+                    削除
+                  </button>
+                </form>
+              </div>
             ))}
           </div>
         )}
@@ -196,17 +212,26 @@ export function CategorySection({ categories }: CategorySectionProps) {
               まだ収入カテゴリがありません。
             </p>
           ) : (
-            <div className="mt-3 flex flex-wrap gap-2">
-              {incomeCategories.map((category) => (
-                <span
-                  className="rounded-md border border-teal-200 bg-teal-50 px-2 py-1 text-sm text-teal-800"
-                  key={category.id}
-                >
-                  {category.name}
-                </span>
-              ))}
-            </div>
-          )}
+              <div className="mt-3 grid gap-2">
+                {incomeCategories.map((category) => (
+                  <div
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-teal-200 bg-teal-50 px-3 py-2 text-sm text-teal-800"
+                    key={category.id}
+                  >
+                    <span>{category.name}</span>
+                    <form action={deleteCategory}>
+                      <input name="id" type="hidden" value={category.id} />
+                      <button
+                        className="rounded-md border border-rose-200 bg-white px-3 py-1 text-sm font-medium text-rose-700 transition hover:bg-rose-50"
+                        type="submit"
+                      >
+                        削除
+                      </button>
+                    </form>
+                  </div>
+                ))}
+              </div>
+            )}
         </div>
 
         <div>
@@ -218,17 +243,26 @@ export function CategorySection({ categories }: CategorySectionProps) {
               まだ支出カテゴリがありません。
             </p>
           ) : (
-            <div className="mt-3 flex flex-wrap gap-2">
-              {expenseCategories.map((category) => (
-                <span
-                  className="rounded-md border border-rose-200 bg-rose-50 px-2 py-1 text-sm text-rose-800"
-                  key={category.id}
-                >
-                  {category.name}
-                </span>
-              ))}
-            </div>
-          )}
+              <div className="mt-3 grid gap-2">
+                {expenseCategories.map((category) => (
+                  <div
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800"
+                    key={category.id}
+                  >
+                    <span>{category.name}</span>
+                    <form action={deleteCategory}>
+                      <input name="id" type="hidden" value={category.id} />
+                      <button
+                        className="rounded-md border border-rose-200 bg-white px-3 py-1 text-sm font-medium text-rose-700 transition hover:bg-rose-50"
+                        type="submit"
+                      >
+                        削除
+                      </button>
+                    </form>
+                  </div>
+                ))}
+              </div>
+            )}
         </div>
       </div>
     </section>

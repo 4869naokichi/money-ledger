@@ -12,11 +12,13 @@ type CategoryInsert = {
   display_order: number;
 };
 
-type TransactionInsert = {
+type TransactionWrite = {
   event_date: string;
-  kind: "income" | "expense";
-  category_id: string;
-  account_id: string;
+  kind: Transaction["kind"];
+  category_id: string | null;
+  account_id: string | null;
+  from_account_id: string | null;
+  to_account_id: string | null;
   payment_method: string | null;
   merchant: string | null;
   memo: string | null;
@@ -99,6 +101,18 @@ export async function getAccounts() {
   );
 }
 
+export async function getAccountByName(name: string) {
+  const accounts = await supabaseRequest<Account[]>(
+    `accounts?${query({
+      select: "id,name,type,is_active,display_order",
+      name: `eq.${name}`,
+      limit: "1",
+    })}`,
+  );
+
+  return accounts.at(0) ?? null;
+}
+
 export async function getCategories() {
   return supabaseRequest<Category[]>(
     `categories?${query({
@@ -107,6 +121,22 @@ export async function getCategories() {
       order: "kind.asc,display_order.asc,name.asc",
     })}`,
   );
+}
+
+export async function getCategoryByNameAndKind(
+  name: string,
+  kind: Category["kind"],
+) {
+  const categories = await supabaseRequest<Category[]>(
+    `categories?${query({
+      select: "id,name,kind,is_active,display_order",
+      name: `eq.${name}`,
+      kind: `eq.${kind}`,
+      limit: "1",
+    })}`,
+  );
+
+  return categories.at(0) ?? null;
 }
 
 export async function getTransactions() {
@@ -118,6 +148,19 @@ export async function getTransactions() {
       limit: "50",
     })}`,
   );
+}
+
+export async function getTransaction(id: string) {
+  const transactions = await supabaseRequest<Transaction[]>(
+    `transactions?${query({
+      select:
+        "id,event_date,kind,category_id,account_id,from_account_id,to_account_id,payment_method,merchant,memo,amount,status,due_date,created_at,updated_at,account:accounts!transactions_account_id_fkey(name),from_account:accounts!transactions_from_account_id_fkey(name),to_account:accounts!transactions_to_account_id_fkey(name),categories(name,kind)",
+      id: `eq.${id}`,
+      limit: "1",
+    })}`,
+  );
+
+  return transactions.at(0) ?? null;
 }
 
 export async function createAccount(payload: AccountInsert) {
@@ -140,12 +183,77 @@ export async function createCategory(payload: CategoryInsert) {
   });
 }
 
-export async function createTransaction(payload: TransactionInsert) {
+export async function reactivateAccount(id: string, payload: AccountInsert) {
+  await supabaseRequest<null>(`accounts?${query({ id: `eq.${id}` })}`, {
+    method: "PATCH",
+    headers: {
+      Prefer: "return=minimal",
+    },
+    body: JSON.stringify({
+      ...payload,
+      is_active: true,
+    }),
+  });
+}
+
+export async function reactivateCategory(id: string, payload: CategoryInsert) {
+  await supabaseRequest<null>(`categories?${query({ id: `eq.${id}` })}`, {
+    method: "PATCH",
+    headers: {
+      Prefer: "return=minimal",
+    },
+    body: JSON.stringify({
+      ...payload,
+      is_active: true,
+    }),
+  });
+}
+
+export async function deactivateAccount(id: string) {
+  await supabaseRequest<null>(`accounts?${query({ id: `eq.${id}` })}`, {
+    method: "PATCH",
+    headers: {
+      Prefer: "return=minimal",
+    },
+    body: JSON.stringify({ is_active: false }),
+  });
+}
+
+export async function deactivateCategory(id: string) {
+  await supabaseRequest<null>(`categories?${query({ id: `eq.${id}` })}`, {
+    method: "PATCH",
+    headers: {
+      Prefer: "return=minimal",
+    },
+    body: JSON.stringify({ is_active: false }),
+  });
+}
+
+export async function createTransaction(payload: TransactionWrite) {
   await supabaseRequest<null>("transactions", {
     method: "POST",
     headers: {
       Prefer: "return=minimal",
     },
     body: JSON.stringify(payload),
+  });
+}
+
+export async function updateTransaction(id: string, payload: TransactionWrite) {
+  await supabaseRequest<null>(`transactions?${query({ id: `eq.${id}` })}`, {
+    method: "PATCH",
+    headers: {
+      Prefer: "return=minimal",
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteTransaction(id: string) {
+  await supabaseRequest<null>(`transactions?${query({ id: `eq.${id}` })}`, {
+    method: "DELETE",
+    headers: {
+      Prefer: "return=minimal",
+    },
   });
 }
