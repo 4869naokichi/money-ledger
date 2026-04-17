@@ -1,5 +1,18 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Supabase schema setup
+
+初回セットアップでは、Supabase の SQL Editor から `schema.sql` を実行してください。
+
+1. Supabase の対象プロジェクトを開く
+2. 左メニューから `SQL Editor` を開く
+3. `New query` を作成する
+4. このリポジトリの `schema.sql` の内容を貼り付ける
+5. `Run` を押して実行する
+6. `Table Editor` で `accounts`, `categories`, `transactions`, `future_items`, `savings_adjustments` が作成されたことを確認する
+
+`schema.sql` は初回適用用です。すでに同名テーブルが存在する環境では、先に既存データのバックアップやマイグレーション方針を確認してください。
+
 ## Getting Started
 
 First, run the development server:
