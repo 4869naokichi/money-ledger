@@ -1,5 +1,17 @@
 import type { Account, Category, Transaction } from "./ledger";
 
+type AccountInsert = {
+  name: string;
+  type: Account["type"];
+  display_order: number;
+};
+
+type CategoryInsert = {
+  name: string;
+  kind: Category["kind"];
+  display_order: number;
+};
+
 type TransactionInsert = {
   event_date: string;
   kind: "income" | "expense";
@@ -101,11 +113,31 @@ export async function getTransactions() {
   return supabaseRequest<Transaction[]>(
     `transactions?${query({
       select:
-        "id,event_date,kind,category_id,account_id,payment_method,merchant,memo,amount,status,due_date,created_at,updated_at,accounts(name),categories(name,kind)",
+        "id,event_date,kind,category_id,account_id,from_account_id,to_account_id,payment_method,merchant,memo,amount,status,due_date,created_at,updated_at,account:accounts!transactions_account_id_fkey(name),from_account:accounts!transactions_from_account_id_fkey(name),to_account:accounts!transactions_to_account_id_fkey(name),categories(name,kind)",
       order: "event_date.desc,created_at.desc",
       limit: "50",
     })}`,
   );
+}
+
+export async function createAccount(payload: AccountInsert) {
+  await supabaseRequest<null>("accounts", {
+    method: "POST",
+    headers: {
+      Prefer: "return=minimal",
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function createCategory(payload: CategoryInsert) {
+  await supabaseRequest<null>("categories", {
+    method: "POST",
+    headers: {
+      Prefer: "return=minimal",
+    },
+    body: JSON.stringify(payload),
+  });
 }
 
 export async function createTransaction(payload: TransactionInsert) {

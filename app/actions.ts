@@ -2,10 +2,30 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createTransaction as insertTransaction } from "@/lib/supabase-rest";
-import type { TransactionKind, TransactionStatus } from "@/lib/ledger";
+import {
+  createAccount as insertAccount,
+  createCategory as insertCategory,
+  createTransaction as insertTransaction,
+} from "@/lib/supabase-rest";
+import type {
+  AccountType,
+  CategoryKind,
+  TransactionKind,
+  TransactionStatus,
+} from "@/lib/ledger";
 
-const transactionKinds: TransactionKind[] = ["income", "expense"];
+type EntryKind = Exclude<TransactionKind, "transfer">;
+
+const accountTypes: AccountType[] = [
+  "cash",
+  "bank",
+  "credit_card",
+  "e_money",
+  "investment",
+  "other",
+];
+const categoryKinds: CategoryKind[] = ["income", "expense"];
+const transactionKinds: EntryKind[] = ["income", "expense"];
 const transactionStatuses: TransactionStatus[] = [
   "planned",
   "pending",
@@ -33,11 +53,85 @@ function readOptional(formData: FormData, key: string) {
   return value.trim();
 }
 
-function redirectWithError(error: unknown): never {
+function readDisplayOrder(formData: FormData) {
+  const value = readOptional(formData, "display_order");
+
+  if (value === null) {
+    return 0;
+  }
+
+  const displayOrder = Number(value);
+
+  if (!Number.isInteger(displayOrder) || displayOrder < 0) {
+    throw new Error("表示順は0以上の整数で入力してください。");
+  }
+
+  return displayOrder;
+}
+
+function redirectWithError(error: unknown, path = "/"): never {
   const message =
     error instanceof Error ? error.message : "登録中にエラーが発生しました。";
 
-  redirect(`/?error=${encodeURIComponent(message.slice(0, 180))}`);
+  redirect(`${path}?error=${encodeURIComponent(message.slice(0, 180))}`);
+}
+
+export async function createAccount(formData: FormData) {
+  let error: unknown = null;
+
+  try {
+    const name = readRequired(formData, "name");
+    const type = readRequired(formData, "type") as AccountType;
+
+    if (!accountTypes.includes(type)) {
+      throw new Error("口座タイプを正しく選択してください。");
+    }
+
+    await insertAccount({
+      name,
+      type,
+      display_order: readDisplayOrder(formData),
+    });
+  } catch (caughtError) {
+    error = caughtError;
+  }
+
+  if (error) {
+    redirectWithError(error, "/accounts");
+  }
+
+  revalidatePath("/accounts");
+  revalidatePath("/transactions/new");
+  redirect("/accounts?created=1");
+}
+
+export async function createCategory(formData: FormData) {
+  let error: unknown = null;
+
+  try {
+    const name = readRequired(formData, "name");
+    const kind = readRequired(formData, "kind") as CategoryKind;
+
+    if (!categoryKinds.includes(kind)) {
+      throw new Error("カテゴリ種別を正しく選択してください。");
+    }
+
+    await insertCategory({
+      name,
+      kind,
+      display_order: readDisplayOrder(formData),
+    });
+  } catch (caughtError) {
+    error = caughtError;
+  }
+
+  if (error) {
+    redirectWithError(error, "/categories");
+  }
+
+  revalidatePath("/categories");
+  revalidatePath("/transactions/new");
+  redirect("/categories?created=1");
 }
 
 export async function createTransaction(formData: FormData) {
@@ -45,7 +139,7 @@ export async function createTransaction(formData: FormData) {
 
   try {
     const eventDate = readRequired(formData, "event_date");
-    const kind = readRequired(formData, "kind") as TransactionKind;
+    const kind = readRequired(formData, "kind") as EntryKind;
     const categoryId = readRequired(formData, "category_id");
     const accountId = readRequired(formData, "account_id");
     const amount = Number(readRequired(formData, "amount"));
@@ -83,7 +177,7 @@ export async function createTransaction(formData: FormData) {
   }
 
   if (error) {
-    redirectWithError(error);
+    redirectWithError(error, "/transactions/new");
   }
 
   revalidatePath("/");

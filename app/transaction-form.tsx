@@ -196,7 +196,7 @@ export function TransactionForm({ accounts, categories }: TransactionFormProps) 
 
       {!canSubmit ? (
         <p className="text-sm text-rose-700 sm:col-span-2 lg:col-span-3">
-          取引を登録するには、Supabaseで有効な口座とカテゴリを先に登録してください。
+          取引を登録するには、先に口座とカテゴリを登録してください。
         </p>
       ) : (
         <div className="hidden lg:block lg:col-span-3" />
